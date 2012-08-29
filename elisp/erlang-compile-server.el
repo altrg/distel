@@ -75,8 +75,8 @@
   "A list of compile options that should be run when testing and compiling.
 For more info, check out the variable `erlang-compile-extra-opts'.")
 
-(defvar erl-ecs-compile-includes '()
-  "A list of compile include paths that should be run when testing and compiling.")
+(defvar erl-ecs-includes '()
+  "A list of include paths that should be added.")
 
 ;;; Error lists
 (defvar erl-ecs-error-list '())
@@ -186,7 +186,7 @@ And then set one or more of the following variables (defaults):
 `erl-ecs-interval' (120) (not supported yet)
 
 `erl-ecs-compile-options' (nil) - to specify what extra compile options to be runned
-`erl-ecs-compile-includes' (nil) - to specify what compile include paths to be used
+`erl-ecs-includes' (nil) - to specify what compile include paths to be used
 `erl-ecs-user-specified-errors' (nil) - specify own errors, must be a list of tuples of lineno, type,and error tuple
 
 For custom colors define the faces:
@@ -340,12 +340,13 @@ Extra compile options could also be specified by setting the `erl-ecs-compile-op
   (erl-ecs-message "ECS: Checking Dialyzer.")
 
   (let ((path (buffer-file-name))
+    (incstring (erl-ecs-get-includes))
 	(node (erl-target-node)))
 
     (erl-ecs-remove-overlays erl-ecs-dialyzer-string)
 
     (erl-spawn
-      (erl-send-rpc node 'erlang_compile_server 'check_dialyzer (list path))
+      (erl-send-rpc node 'erlang_compile_server 'check_dialyzer (list path incstring))
       (erl-receive ()
 	  ;; no dialyzer warnings
 	  ((['rex ['ok]]
@@ -438,11 +439,11 @@ Extra compile options could also be specified by setting the `erl-ecs-compile-op
   (setq erl-ecs-timer))
 
 (defun erl-ecs-get-includes ()
-  "Find the includefiles for an erlang module."
+  "Find the include files for an erlang module."
   (save-excursion
     (set-buffer erl-ecs-current-buffer)
     (let ((inc-regexp (concat "^-include\\(_lib\\)?(\"\\([^\)]*\\)"))
-	  (include-list erl-ecs-compile-includes)
+	  (include-list erl-ecs-includes)
 	  (pt (point-min)))
       (while (string-match inc-regexp (buffer-string) pt)
 	(add-to-list 'include-list (file-name-directory (substring (match-string 2) 1)))

@@ -18,7 +18,7 @@
 	 eunit_loop/2,
 	 xref/1,
 	 xref_start/1,
-	 check_dialyzer/1
+	 check_dialyzer/2
 	]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,20 +163,20 @@ form_mfa({_M, F, A}) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% check_dialyzer/1 takes a path and runs dialyzer tests on the files of that path
-check_dialyzer(Path) ->
+check_dialyzer(Path, Includes) ->
     DiaOpts = [{from, src_code}, {files,[Path]}, {get_warnings, true},
-	       {warnings, [no_return, no_unused, no_improper_lists,
-			   no_fun_app, no_match, no_opaque, no_fail_call,
-			   error_handling, race_conditions, %%behaviours,
-			   unmatched_returns, overspecs, underspecs, specdiffs]}],
-
-    Ret = try dialyzer:run(DiaOpts) of
+	       {warnings, [error_handling, race_conditions, unmatched_returns, underspecs]}],
+    DiaOpts1 = case [I || I <- Includes, I /= []] of
+        [] -> DiaOpts;
+        Incs -> [{include_dirs, Incs} | DiaOpts]
+    end,
+    Ret = try dialyzer:run(DiaOpts1) of
 	      [] -> [];
 	      Warnings when is_list(Warnings) ->
 		  {w, [{L, warning, format_msg(Msg)} || {_, {_, L}, Msg} <- Warnings]};
-	      E -> E
+	      E ->
 	  catch
-	      E -> E
+	      E ->
 	  end,
     case Ret of
 	[] -> {ok};
