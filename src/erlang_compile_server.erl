@@ -162,7 +162,7 @@ form_mfa({_M, F, A}) ->
 %%%%     DIALYZER      %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% check_dialyzer/1 takes a path and runs dialyzer tests on the files of that path
+%%% check_dialyzer/2 takes a path and runs dialyzer tests on the files of that path
 check_dialyzer(Path, Includes) ->
     DiaOpts = [{from, src_code}, {files,[Path]}, {get_warnings, true},
 	       {warnings, [error_handling, race_conditions, unmatched_returns, underspecs]}],
@@ -174,9 +174,9 @@ check_dialyzer(Path, Includes) ->
 	      [] -> [];
 	      Warnings when is_list(Warnings) ->
 		  {w, [{L, warning, format_msg(Msg)} || {_, {_, L}, Msg} <- Warnings]};
-	      E ->
+	      E -> E
 	  catch
-	      E ->
+	      E -> E
 	  end,
     case Ret of
 	[] -> {ok};
